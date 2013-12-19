@@ -1,14 +1,14 @@
 # $File: Makefile
-# $Date: Thu Dec 19 14:37:54 2013 +0800
+# $Date: Thu Dec 19 14:41:25 2013 +0800
 
 
-Sugar = mono ~/Work/SugarCpp-C\#/src/SugarCpp.CommandLine/bin/Debug/SugarCpp.CommandLine.exe
+Sugar ?= mono ~/Work/SugarCpp-C\#/src/SugarCpp.CommandLine/bin/Debug/SugarCpp.CommandLine.exe
 OBJ_DIR = obj
 TARGET = main
 
 DEFINES = -DDEBUG
 
-OPTFLAGS = -Wall -Wextra -Wconversion
+OPTFLAGS = -Wall -Wextra -Wconversion -O2
 
 CXXFLAGS += -std=c++11 -pthread
 CXXFLAGS += $(DEFINES) $(OPTFLAGS)
@@ -18,13 +18,10 @@ CC = g++
 SHELL = bash
 ccSOURCES = $(shell find -name "*.sc" | sed 's/^\.\///g')
 OBJS = $(addprefix $(OBJ_DIR)/,$(ccSOURCES:.sc=.o))
-DEPFILES = $(OBJS:.o=.d)
 
-.PHONY: all clean run
+.PHONY: all clean
 
 all: client server
-
-sinclude $(DEPFILES)
 
 client: $(addprefix $(OBJ_DIR)/, Client.o Common.o Socket.o Command.o)
 	@echo "Linking ..."

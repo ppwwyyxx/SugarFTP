@@ -1,4 +1,9 @@
-## A Simple FTP Server / Client written in [SugarCpp](https://github.com/curimit/SugarCpp)
+### A Simple FTP Server / Client written in [SugarCpp](https://github.com/curimit/SugarCpp)
+
+## Compile
+
+Install [SugarCpp](https://github.com/curimit/SugarCpp), then run:
+	Sugar="mono /path/to/sugarcpp/commandline.exe" make
 
 ## Usage:
 
