@@ -38,7 +38,7 @@ class FtpClient
         print_debug("<-- " + cmd.to_string())
         return cmd
 
-    SocketPtr open_pasv_data_conn()
+    SocketPtr open_data_conn()
         cmd := cmd_send("PASV")
         h0, h1, h2, h3, p0, p1: int
         if sscanf(
@@ -67,7 +67,7 @@ class FtpClient
                     when cmd == "help"
                         cout << "Available command: ls / cd / q(quit) / rm / put / get / help" << endl
                     when cmd == "ls"
-                        data_conn := @open_pasv_data_conn()
+                        data_conn := @open_data_conn()
                         @cmd_send("LIST " + arg)
                         loop
                             s := data_conn->recv(@buf, sizeof(@buf))
@@ -86,7 +86,7 @@ class FtpClient
                             throw(StopCommand())
                         finally fclose(fin)
 
-                        data_conn := @open_pasv_data_conn()
+                        data_conn := @open_data_conn()
                         @cmd_send(string("STOR ") + basename(strdupa(arg.c_str())))
                         loop
                             size := fread(@buf, 1, sizeof(@buf), fin)
@@ -101,7 +101,7 @@ class FtpClient
                             throw(StopCommand())
                         finally fclose(fout)
                         try
-                            data_conn := @open_pasv_data_conn()
+                            data_conn := @open_data_conn()
                             @cmd_send("RETR " + arg)
                             loop
                                 size := data_conn->recv(@buf, sizeof(@buf))

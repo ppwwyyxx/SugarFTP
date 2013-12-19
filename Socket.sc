@@ -21,7 +21,7 @@ SOCKET_TIMEOUT : const int = 100
 
 [public]
 class TCPSocket
-    [private]
+    [protected]
     fd : int = -1
     [private]
     peerinfo: string
@@ -32,11 +32,8 @@ class TCPSocket
 
     TCPSocket()
         return
-    TCPSocket(fd: int)
-        @set_socket_fd(fd)
-
-    ~TCPSocket()
-        @close()
+    TCPSocket(fd: int) = @set_socket_fd(fd)
+    ~TCPSocket() = @close()
 
     void close()
         if @fd != -1
@@ -73,9 +70,9 @@ class TCPSocket
             size -= s
             buf += s
 
-    size_t recv(_buf: void*, max_size: size_t)
+    size_t recv(buf: void*, max_size: size_t)
         return 0 if @is_closed()
-        s := global::recv(@fd, _buf, max_size, 0)
+        s := global::recv(@fd, buf, max_size, 0)
         throw(FTPExc(string("socket: failed to read: ") + strerror(errno))) if s < 0
         return s
 
@@ -157,9 +154,6 @@ class TCPSocket
         ret->peerinfo = peerinfo
         return ret
 
-    [const]
-    int get_socket_fd() = @fd
-
 
 [public]
 class ServerSocket: TCPSocket
@@ -189,15 +183,14 @@ class ServerSocket: TCPSocket
         clt_addr_len := (socklen_t)sizeof(clt_addr)
         cltfd: int
         loop
-            cltfd = global::accept(@get_socket_fd(), (sockaddr*)&clt_addr, &clt_addr_len)
+            cltfd = global::accept(@fd, (sockaddr*)&clt_addr, &clt_addr_len)
             if cltfd == -1
-                if errno != EINTR
-                    print_debug(string("bad client socket fd: ") + strerror(errno))
+                print_debug(string("bad client socket fd: ") + strerror(errno)) if errno != EINTR
                 continue
             break
 
-        hostbuf: char[NI_MAXHOST] = "?"
-        servbuf: char[NI_MAXSERV] = "?"
+        hostbuf: char[NI_MAXHOST]
+        servbuf: char[NI_MAXSERV]
         getnameinfo(
             (sockaddr*) &clt_addr
             clt_addr_len
