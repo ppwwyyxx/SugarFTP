@@ -71,23 +71,9 @@ class TCPSocket
             buf += s
 
     size_t recv(buf: void*, max_size: size_t)
-        return 0 if @is_closed()
         s := global::recv(@fd, buf, max_size, 0)
         throw(FTPExc(string("socket: failed to read: ") + strerror(errno))) if s < 0
         return s
-
-    bool is_closed()
-        throw(FTPExc("attempt to operate on unbound socket")) if @fd < 0
-        rfd: fd_set
-        FD_ZERO(&rfd)
-        FD_SET(@fd, &rfd)
-        tv: timeval
-        memset(&tv, 0, sizeof(tv))
-        select(@fd + 1, &rfd, 0, 0, &tv)
-        return false if !FD_ISSET(@fd, &rfd)
-        n := 0
-        ioctl(@fd, FIONREAD, &n)
-        return n == 0
 
     [static]
     SocketPtr connect(host: const char*, service: const char*)

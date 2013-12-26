@@ -87,8 +87,9 @@ class FtpSession
         if allow_nonexist
             basename = fpath
             i := fpath.rfind('/')
-            dirname.assign(fpath.c_str(), i)
-            basename.assign(fpath.c_str() + i)
+            if i != string::npos
+                dirname.assign(fpath.c_str(), i)
+                basename.assign(fpath.c_str() + i)
             query_path = dirname
         else
             query_path = fpath
