@@ -41,7 +41,7 @@ class FtpServer
 
     void start()
         socket: ServerSocket(@port)
-        print_debug("Server listening on " + TCPSocket::format_addr(socket.get_local_addr()) + ":" + to_string(socket.get_local_port()))
+        print_debug("Server listening on : " + to_string(socket.get_local_port()))
         id := 0
         loop
             client := new FtpSession(socket.accept(), id++)
@@ -63,7 +63,7 @@ class FtpSession
         @handler = CmdHandler(socket)
         @ctrl = socket
         @clt_id = clt_id
-        @ctrl->enable_timeout()
+        @ctrl->set_timeout()
         print_debug("new client: " + @ctrl->get_peerinfo() + " [as " + @get_peerinfo() + " ]")
 
     void close_data_conn(socket: SocketPtr, msg: const string&)
@@ -78,7 +78,7 @@ class FtpSession
         @srv_socket.reset()
         @passive = false
         @handler.send("125", msg)
-        ret->enable_timeout()
+        ret->set_timeout()
         return ret
 
     string safe_path(fpath: const string&, allow_nonexist : bool = false)
@@ -154,11 +154,18 @@ class FtpSession
                 addr := @ctrl->get_local_addr()
                 tmp : shared_ptr<ServerSocket>(new ServerSocket(0))
                 @srv_socket = tmp
-                @srv_socket->enable_timeout()
+                @srv_socket->set_timeout()
                 port := @srv_socket->get_local_port()
+                str_addr := TCPSocket::ip_addr(
+                    (addr >> 24) & 0xff
+                    (addr >> 16) & 0xff
+                    (addr >> 8) & 0xff
+                    addr & 0xff
+                    ','
+                )
                 @handler.send(
                     "227"
-                    "Entering Passive Mode (" + TCPSocket::format_addr(addr, ',') + "," + to_string(port >> 8) + "," + to_string(port & 0xff) + ")."
+                    "Entering Passive Mode (" + str_addr + "," + to_string(port >> 8) + "," + to_string(port & 0xff) + ")."
                     )
             when cmd == "LIST"
                 path := @cur_cmd.arg

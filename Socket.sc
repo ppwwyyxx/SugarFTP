@@ -17,7 +17,7 @@ import "Common.h"
 using namespace std
 typedef SocketPtr = shared_ptr<TCPSocket>
 
-SOCKET_TIMEOUT : const int = 100
+SOCKET_TIMEOUT : const int = 50
 
 [public]
 class TCPSocket
@@ -103,21 +103,12 @@ class TCPSocket
             throw(FTPExc(string("Failed to connect to (") + host + ", " + service + strerror(errno)))
         return TCPSocket::make_from_fd(fd)
 
-    void enable_timeout()
+    void set_timeout()
         timeout: timeval
         timeout.tv_sec = SOCKET_TIMEOUT
-        timeout.tv_usec = 0
-        setsockopt(@fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout))
-        setsockopt(@fd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout))
-
-    [static]
-    string format_addr(addr: unsigned, sep: char='.') = TCPSocket::ip_addr(
-        (addr >> 24) & 0xff
-        (addr >> 16) & 0xff
-        (addr >> 8) & 0xff
-        addr & 0xff
-        sep
-        )
+        // socket-level options
+        setsockopt(@fd, SOL_SOCKET, SO_RCVTIMEO, (const void*)&timeout, sizeof(timeout))
+        setsockopt(@fd, SOL_SOCKET, SO_SNDTIMEO, (const void*)&timeout, sizeof(timeout))
 
     [static]
     string ip_addr(h0: int, h1: int, h2: int, h3: int, sep: char='.')
