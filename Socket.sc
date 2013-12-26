@@ -52,15 +52,12 @@ class TCPSocket
         local_addr_ptr := (sockaddr*) &local_addr
         addrlen := (socklen_t)sizeof(local_addr)
         memset(local_addr_ptr, 0, addrlen)
-        if getsockname(fd, local_addr_ptr, &addrlen)
-            throw(FTPExc(string("getsockname: ") + strerror(errno)))
-
+        getsockname(fd, local_addr_ptr, &addrlen)
         @local_addr = ntohl(local_addr.sin_addr.s_addr)
         @local_port = ntohs(local_addr.sin_port)
 
 
     void send(_buf: const void*, size: size_t)
-        throw(FTPExc("attempt to write to unbound socket")) if @fd < 0
         buf := (const char*)_buf
         while size
             s := global::send(@fd, buf, size, 0)
@@ -81,8 +78,7 @@ class TCPSocket
         hints.ai_socktype = SOCK_STREAM
 
         result: addrinfo*
-        if s := getaddrinfo(host, service, &hints, &result)
-            throw(FTPExc(string("Failed to getaddrinfo(") + host + ", " + service + gai_strerror(s)))
+        s := getaddrinfo(host, service, &hints, &result)
 
         fd := -1
         loop
@@ -140,7 +136,7 @@ class ServerSocket: TCPSocket
         if global::bind(sockfd, srv_addr_ptr, sizeof(srv_addr)) < 0
             throw(FTPExc(string("failed to bind to ") + to_string(port) + ": " + strerror(errno)))
         if global::listen(sockfd, backlog)
-            throw(FTPExc(string("listen failed: ") + strerror(errno)))
+            throw(FTPExc(string("failed to listen : ") + strerror(errno)))
 
         @set_socket_fd(sockfd)
 
