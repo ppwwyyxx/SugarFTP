@@ -24,8 +24,6 @@ class TCPSocket
     [protected]
     fd : int = -1
     [private]
-    peerinfo: string
-    [private]
     local_addr: unsigned
     [private]
     local_port: int
@@ -101,7 +99,7 @@ class TCPSocket
         freeaddrinfo(result)
         if fd == -1
             throw(FTPExc(string("Failed to connect to (") + host + ", " + service + strerror(errno)))
-        return TCPSocket::make_from_fd(fd)
+        return SocketPtr(new TCPSocket(fd))
 
     void set_timeout()
         timeout: timeval
@@ -117,19 +115,10 @@ class TCPSocket
         return ret
 
     [const]
-    string get_peerinfo() = @peerinfo
-
-    [const]
     int get_local_port() = @local_port
 
     [const]
     unsigned get_local_addr() = @local_addr
-
-    [static]
-    SocketPtr make_from_fd(fd: int, peerinfo: string = "")
-        ret : SocketPtr(new TCPSocket(fd))
-        ret->peerinfo = peerinfo
-        return ret
 
 
 [public]
@@ -175,5 +164,5 @@ class ServerSocket: TCPSocket
             servbuf, NI_MAXSERV
             NI_NUMERICHOST | NI_NUMERICSERV
         )
-        return TCPSocket::make_from_fd(cltfd, string(hostbuf) + ":" + servbuf)
+        return SocketPtr(new TCPSocket(cltfd))
 

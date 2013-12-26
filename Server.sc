@@ -35,7 +35,7 @@ class FtpServer
         finally delete(session)
         try
             session->run()
-            print_debug("Session " + session->get_peerinfo() + " exited")
+            print_debug("Session exited")
         catch e: FTPExc
             print_debug("Exception Happened: " + e.msg)
 
@@ -64,7 +64,7 @@ class FtpSession
         @ctrl = socket
         @clt_id = clt_id
         @ctrl->set_timeout()
-        print_debug("new client: " + @ctrl->get_peerinfo() + " [as " + @get_peerinfo() + " ]")
+        print_debug("new client.")
 
     void close_data_conn(socket: SocketPtr, msg: const string&)
         socket->close()
@@ -123,17 +123,9 @@ class FtpSession
         catch e: Quit
             return
 
-    [const]
-    string get_peerinfo()
-        if @clt_id >= 0
-            buf: static thread_local char[20]
-            sprintf(buf, "%d", @clt_id)
-            return string(buf)
-        return @ctrl->get_peerinfo()
-
     void execute()
         @cur_cmd = @handler.recv()
-        print_debug("Client " + @get_peerinfo() + ": " + @cur_cmd.to_string())
+        print_debug("Client : " + @cur_cmd.to_string())
         cmd := @cur_cmd.cmd
         switch
             when cmd == "USER"
@@ -214,7 +206,7 @@ class FtpSession
                     break if size <= 0
                     totsize += size
                     fwrite(@buf, 1, size, fout)
-                print_debug("client " + @get_peerinfo() + ": upload file " + realpath + " size: " + to_string(totsize))
+                print_debug("client : upload file " + realpath + " size: " + to_string(totsize))
                 @close_data_conn(data_conn, "transfer completed")
             when cmd == "SIZE"
                 realpath := @safe_path(@cur_cmd.arg)
