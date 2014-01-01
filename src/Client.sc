@@ -26,7 +26,7 @@ class FtpClient
     void quit() = @cmd_send("QUIT")
 
     Command cmd_send(cmd: const string&)
-        print_debug("--> " + cmd)
+        //print_debug("--> " + cmd)
         @ctrl->send((cmd + "\r\n").c_str(), cmd.length() + 2)
         return @response()
 
@@ -35,7 +35,7 @@ class FtpClient
         if cmd.cmd[0] != '1' and cmd.cmd[0] != '2'
             print_debug("Bad response: " + cmd.to_string())
             throw(StopCommand())
-        print_debug("<-- " + cmd.to_string())
+        //print_debug("<-- " + cmd.to_string())
         return cmd
 
     SocketPtr open_data_conn()
