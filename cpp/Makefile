@@ -1,15 +1,12 @@
 # $File: Makefile
-# $Date: Wed Jan 01 19:21:34 2014 +0800
+# $Date: Wed Jan 01 19:18:40 2014 +0800
 
 
-Sugar ?= mono ~/Work/SugarCpp-C\#/src/SugarCpp.CommandLine/bin/Debug/SugarCpp.CommandLine.exe
 OBJ_DIR = obj
-CPP_DIR = ../cpp
-TARGET = main
 
 DEFINES = -DDEBUG
 
-OPTFLAGS = -Wall -Wextra -Wconversion -O0 -g
+OPTFLAGS = -Wall -Wextra -Wconversion -O3
 
 CXXFLAGS += -std=c++11 -pthread
 CXXFLAGS += $(DEFINES) $(OPTFLAGS)
@@ -34,12 +31,9 @@ server: $(addprefix $(OBJ_DIR)/, Server.o Common.o Socket.o Command.o)
 	@$(CC) $^ -o $@ $(LDFLAGS)
 	@echo "done."
 
-.PRECIOUS: $(CPP_DIR)/%.cpp
+.PRECIOUS: $(OBJ_DIR)/%.cpp
 
-$(CPP_DIR)/%.cpp: %.sc
-	$(Sugar) $< -o $(CPP_DIR) --nocode
-
-$(OBJ_DIR)/%.o: $(CPP_DIR)/%.cpp $(OBJ_DIR)
+$(OBJ_DIR)/%.o: $(OBJ_DIR)/%.cpp
 	@echo "[cc] $< ..."
 	@$(CC) -c $< -o $@ $(CXXFLAGS)
 
@@ -47,5 +41,4 @@ $(OBJ_DIR):
 	mkdir -p $@
 
 clean:
-	@rm -rf $(CPP_DIR)/*.{cpp,h}
 	@rm -rf $(OBJ_DIR)
