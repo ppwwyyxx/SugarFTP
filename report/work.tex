@@ -1,0 +1,78 @@
+%File: work.tex
+%Date: Wed Jan 01 22:51:57 2014 +0800
+%Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
+\section{实验实现}
+程序采用SugarCpp语言编写. SugarCpp是由我参与开发的一种可以翻译至C++的语言
+\footnote{项目代码见\url{https://github.com/curimit/SugarCpp}}
+, 它利用C++11标准为C++添加了语言特性与语法糖.
+
+程序源代码见src目录, 翻译后的C++代码见cpp目录. 项目托管在github上. \footnote{\url{https://github.com/ppwwyyxx/SugarFTP}}
+
+程序的Socket通信基于对TCP Socket的封装\verb|TCPSocket|类, 支持简单的发送/接收, 见\verb|Socket.sc|.
+客户端与服务端对FTP命令的处理都通过CmdHandler类完成, 它管理了一个socket, 并利用它发送与接收FTP命令, 见\verb|Command.sc|.
+客户端与服务端的实现分别位于\verb|Client.sc, Server.sc|
+
+程序主要实现了以下功能:
+\begin{enumerate}
+  \item \verb|ls, cd, quit, rm, put, get, help|几条指令.
+
+  \item 指令实现依照RFC959, 能够与FTP标准通信, 例如可以使用lftp\footnote{\url{http://lftp.yar.ru/}}, chrome对Server进行访问.
+
+  \item 服务端多线程实现, 支持多个用户同时连接.
+
+  \item 访问安全控制, 不允许访问根目录以外的路径.
+\end{enumerate}
+
+\subsection{客户端}
+通过:
+\begin{lstlisting}
+$ ./client <host> <port>
+\end{lstlisting}
+运行客户端. 客户端成功与服务端建立连接后, 会使用anonymous用户登陆, 并使用\verb|TYPE I|以避免文件传输时换行符错误.
+
+随后, 程序打印提示符``\verb|SugarFTP>|'', 可以输入命令. 对\verb|rm, cd|命令, 将其直接发送给服务端.
+对\verb|get, put, ls|命令, 先进入PASV模式建立数据通道并获取端口, 再将其相应的发送给服务端后, 调用统一的接口\verb|Client::response()|获取返回数据.
+
+\subsection{服务端}
+用法:
+\begin{lstlisting}
+$ ./server <root dir> [port]
+\end{lstlisting}
+
+服务端的Socket一旦收到连接请求, 就利用\verb|std::thread|开启一个新的server worker线程, 进行会话.
+会话由\verb|FtpSession|类管理, 负责处理各类命令.
+
+服务端会对\verb|USER, TYPE, QUIT, FEAT, ALLO, PWD, PASV, LIST, CWD, RETR, STOR, SIZE|命令进行相应的处理.
+其中, 对于文件及目录的访问, 做了权限限制, 所有根目录之外的文件都无法被客户端查看和下载.
+对于文件访问中发生的各类错误, 如文件无法读取,无法写入等, 都会有相应的报错.
+
+
+
+\section{思考题}
+\begin{enumerate}
+
+    \item 在FTP 协议中,为什么要建立两个TCP 连接来分别传送命令和数据?
+
+    允许在传送数据的同时继续执行命令, 也允许了一个客户端可以同时传送几个数据.
+    这些如果只有一个TCP连接, 实现起来将会有困难.
+
+
+\item 主动方式和被动方式的主要区别是什么?为何要设计这两种方式?
+
+两种模式发起连接的方向截然相反,主动模式是客户端规定端口,从服务器端向客
+户端的这个端口发起连接; 被动模式是服务器告知客户端一个端口,客户端向服务
+器端的这个端口发起连接.
+设计这两种方式, 主要是为了避免服务器或客户端有一方无公网IP地址的情形(例如在NAT后),
+用可选的这种方式, 只要有一方有公网IP, 就能正常建立数据连接.
+
+\item 当使用FTP 下载大量小文件的时候,速度会很慢,这是什么缘故?可以怎样改进?
+
+因为每传输一个文件,都要先建立连接,再传送数据,最后断开连接, overhead会很大.
+
+\textbf{改进}: 连接保持一段时间后没有新的数据请求再断开.
+\end{enumerate}
+
+\section{总结}
+这次实验加深了对FTP 协议一些细节方面的理解,熟练了Socket编程方法,同时也熟悉了POSIX底层API, 收获很大.
+同时写出的FTP可与标准通信, 因而以后可以用于与别人快速交换数据, 也很有实用价值.

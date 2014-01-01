@@ -1,11 +1,10 @@
 # $File: Makefile
-# $Date: Wed Jan 01 19:21:34 2014 +0800
+# $Date: Wed Jan 01 19:22:18 2014 +0800
 
 
 Sugar ?= mono ~/Work/SugarCpp-C\#/src/SugarCpp.CommandLine/bin/Debug/SugarCpp.CommandLine.exe
 OBJ_DIR = obj
 CPP_DIR = ../cpp
-TARGET = main
 
 DEFINES = -DDEBUG
 
